@@ -117,7 +117,6 @@
             box-shadow: 0 6px 0 var(--dark-brown); transition: transform 0.1s;
         }
 
-        /* UPDATED RESULT BUBBLE: LOWER, BIGGER, AND LARGER TEXT */
         #result-bubble {
             position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
             background: white; border: 12px solid var(--dark-brown);
@@ -210,17 +209,17 @@
 
 <script>
     const gameData = [
-        { id: "bitter_melon", name: "bitter melon", taste: "bitter", clues: "1. It is a vegetable.\n2. It is green.\n3. It is rough." },
-        { id: "pizza", name: "pizza", taste: "salty", clues: "1. It has cheese.\n2. It has different toppings.\n3. It is circle but cut into triangles." },
-        { id: "lemonade", name: "lemonade", taste: "sour", clues: "1. It has lemons.\n2. It has ice.\n3. Some people like it warm." },
-        { id: "hotpot", name: "hotpot", taste: "spicy", clues: "1. It is a big pot of hot soup.\n2. It is very red.\n3. You cook meat and vegetables in it." },
-        { id: "fried_squid", name: "fried squid", taste: "salty", clues: "1. It is seafood with a crunchy skin.\n2. It is chewy inside.\n3. It has pepper on top." },
-        { id: "sour_gummies", name: "sour gummies", taste: "sour", clues: "1. It is a soft and chewy candy.\n2. It has sugar that tastes sour.\n3. It is often shaped like worms or bears." },
-        { id: "cupcake", name: "cupcake", taste: "sweet", clues: "1. It is a very small cake.\n2. It has sweet cream on top.\n3. It comes in a small paper cup." },
-        { id: "pineapple_cake", name: "pineapple cake", taste: "sweet", clues: "1. It is a small, square cookie-cake.\n2. It is soft and buttery.\n3. It has sweet fruit jam inside." },
-        { id: "milk_tea", name: "milk tea", taste: "sweet", clues: "1. It is a mix of tea and milk.\n2. It is often cold with ice.\n3. It has black sugar balls at the bottom." },
-        { id: "spicy_jerky", name: "spicy jerky", taste: "spicy", clues: "1. It is dried meat.\n2. It is hard and salty.\n3. It makes your mouth feel hot." },
-        { id: "fried_chicken", name: "fried chicken", taste: "salty", clues: "1. It is chicken cooked in hot oil.\n2. The outside is very crunchy.\n3. It is a very popular fast food." }
+        { id: "bitter_melon", name: "bitter melon", taste: "bitter", clues: "1. It is a vegetable.\n2. It is green.\n3. It is rough.", isPlural: false, useA: true },
+        { id: "pizza", name: "pizza", taste: "salty", clues: "1. It has cheese.\n2. It has different toppings.\n3. It is circle but cut into triangles.", isPlural: false, useA: true },
+        { id: "lemonade", name: "lemonade", taste: "sour", clues: "1. It has lemons.\n2. It has ice.\n3. Some people like it warm.", isPlural: false, useA: false },
+        { id: "hotpot", name: "hotpot", taste: "spicy", clues: "1. It is a big pot of hot soup.\n2. It is very red.\n3. You cook meat and vegetables in it.", isPlural: false, useA: true },
+        { id: "fried_squid", name: "fried squid", taste: "salty", clues: "1. It is seafood with a crunchy skin.\n2. It is chewy inside.\n3. It has pepper on top.", isPlural: false, useA: false },
+        { id: "sour_gummies", name: "sour gummies", taste: "sour", clues: "1. It is a soft and chewy candy.\n2. It has sugar that tastes sour.\n3. It is often shaped like worms or bears.", isPlural: true, useA: false },
+        { id: "cupcake", name: "cupcake", taste: "sweet", clues: "1. It is a very small cake.\n2. It has sweet cream on top.\n3. It comes in a small paper cup.", isPlural: false, useA: true },
+        { id: "pineapple_cake", name: "pineapple cake", taste: "sweet", clues: "1. It is a small, square cookie-cake.\n2. It is soft and buttery.\n3. It has sweet fruit jam inside.", isPlural: false, useA: true },
+        { id: "milk_tea", name: "milk tea", taste: "sweet", clues: "1. It is a mix of tea and milk.\n2. It is often cold with ice.\n3. It has black sugar balls at the bottom.", isPlural: false, useA: false },
+        { id: "spicy_jerky", name: "spicy jerky", taste: "spicy", clues: "1. It is dried meat.\n2. It is hard and salty.\n3. It makes your mouth feel hot.", isPlural: false, useA: false },
+        { id: "fried_chicken", name: "fried chicken", taste: "salty", clues: "1. It is chicken cooked in hot oil.\n2. The outside is very crunchy.\n3. It is a very popular fast food.", isPlural: false, useA: false }
     ];
 
     let currentLvl = 0;
@@ -338,7 +337,17 @@
     function finishScratch() {
         if (!guessed) return;
         const data = gameData[currentLvl];
-        document.getElementById('sentence-text').innerText = `It's a ${data.name}. It's ${data.taste}.`;
+        
+        // PLURAL LOGIC UPDATE
+        let sentence = "";
+        if (data.isPlural) {
+            sentence = `These are ${data.name}. They are ${data.taste}.`;
+        } else {
+            let article = data.useA ? "a " : "";
+            sentence = `It's ${article}${data.name}. It's ${data.taste}.`;
+        }
+
+        document.getElementById('sentence-text').innerText = sentence;
         document.getElementById('result-bubble').style.display = 'flex';
         document.getElementById('taste-shelf').style.display = 'none';
     }
