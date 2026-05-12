@@ -67,6 +67,7 @@
             box-shadow: 0 8px 0 var(--dark-brown); transition: 0.1s;
         }
 
+        /* CLUE BOX - BIG */
         .clue-box {
             position: absolute; top: 120px; right: 40px;
             width: 500px; background: var(--clue-yellow);
@@ -97,6 +98,7 @@
             to { transform: translateX(-50%) scale(1.1); }
         }
 
+        /* FOOD AREA - BIG */
         .stage-area { position: relative; width: 1000px; height: 700px; display: flex; justify-content: center; align-items: center; }
         .plate-img { position: absolute; bottom: -50px; width: 1100px; z-index: 5; }
         #food-canvas-area { position: absolute; bottom: 80px; width: 650px; height: 650px; z-index: 20; }
@@ -117,6 +119,7 @@
             box-shadow: 0 6px 0 var(--dark-brown); transition: transform 0.1s;
         }
 
+        /* RESULT BUBBLE - LOWER AND BIGGER */
         #result-bubble {
             position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
             background: white; border: 12px solid var(--dark-brown);
@@ -208,6 +211,7 @@
     <audio id="snd-scratch" src="sfx_scratch.mp3"></audio>
 
 <script>
+    // DATA WITH PLURAL AND ARTICLE SETTINGS
     const gameData = [
         { id: "bitter_melon", name: "bitter melon", taste: "bitter", clues: "1. It is a vegetable.\n2. It is green.\n3. It is rough.", isPlural: false, useA: true },
         { id: "pizza", name: "pizza", taste: "salty", clues: "1. It has cheese.\n2. It has different toppings.\n3. It is circle but cut into triangles.", isPlural: false, useA: true },
@@ -324,7 +328,7 @@
             const x = (e.clientX || (e.touches && e.touches[0].clientX)) - rect.left;
             const y = (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top;
             ctx.globalCompositeOperation = 'destination-out';
-            ctx.beginPath(); ctx.arc(x, y, 70, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(x, y, 75, 0, Math.PI * 2); ctx.fill();
         };
         canvas.onmousedown = (e) => { drawing = true; if(guessed) snd.play(); scrub(e); };
         canvas.ontouchstart = (e) => { drawing = true; if(guessed) snd.play(); scrub(e); };
@@ -338,7 +342,7 @@
         if (!guessed) return;
         const data = gameData[currentLvl];
         
-        // PLURAL LOGIC UPDATE
+        // PLURAL AND NO-ARTICLE LOGIC
         let sentence = "";
         if (data.isPlural) {
             sentence = `These are ${data.name}. They are ${data.taste}.`;
