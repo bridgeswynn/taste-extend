@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Food Guess Challenge</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap');
+
+        :root {
+            --dark-brown: #5C4033;
+            --clue-yellow: #FFE082;
+            --btn-green: #4CAF50;
+            --btn-red: #FF5252;
+            --btn-blue: #4FC3F7;
+        }
+
+        body, html {
+            margin: 0; padding: 0;
+            width: 100vw; height: 100vh;
+            font-family: 'Fredoka One', cursive;
+            overflow: hidden;
+            background: url('ui_start_bg.png') no-repeat center center fixed;
+            background-size: cover;
+        }
+
+        .controls-top {
+            position: absolute; top: 20px; left: 20px;
+            z-index: 1000; display: flex; flex-direction: column; gap: 10px;
+            background: rgba(255,255,255,0.9); padding: 10px; border-radius: 15px;
+            border: 3px solid var(--dark-brown);
+        }
+
+        .fs-toggle {
+            padding: 5px 10px; background: var(--btn-blue); color: white;
+            border: none; border-radius: 8px; cursor: pointer; font-family: inherit; font-size: 1rem;
+        }
+
+        .volume-ctrl { display: flex; flex-direction: column; align-items: center; color: var(--dark-brown); font-size: 0.8rem; }
+
+        .screen { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; z-index: 500; }
+        .active { display: flex; }
+
+        #title-screen {
+            background: url('titlepage.png') no-repeat center center;
+            background-size: cover; justify-content: flex-end; 
+            padding-bottom: 80px;
+        }
+
+        #how-screen { 
+            background: rgba(0,0,0,0.85); 
+            justify-content: center; 
+            z-index: 2000;
+        }
+        .how-box {
+            background: var(--clue-yellow); color: var(--dark-brown);
+            padding: 40px; border-radius: 40px; border: 8px solid white;
+            width: 70%; max-width: 600px; text-align: center;
+        }
+        .how-box h1 { font-size: 3.5rem; margin: 0 0 15px 0; }
+        .how-box p { font-size: 1.8rem; line-height: 1.5; margin-bottom: 25px; text-align: left; }
+
+        .menu-btns { display: flex; flex-direction: column; gap: 20px; }
+        .title-btn {
+            padding: 15px 50px; font-size: 2.2rem; border-radius: 50px;
+            border: 6px solid white; cursor: pointer; font-family: inherit;
+            box-shadow: 0 8px 0 var(--dark-brown); transition: 0.1s;
+        }
+
+        .clue-box {
+            position: absolute; top: 120px; right: 40px;
+            width: 500px; background: var(--clue-yellow);
+            border: 10px solid var(--dark-brown); border-radius: 40px;
+            padding: 35px; z-index: 20;
+            box-shadow: 0 12px 0 rgba(0,0,0,0.1);
+        }
+        .clue-box h2 { font-size: 3.5rem; margin: 0; color: var(--dark-brown); text-decoration: underline; }
+        #clue-display { font-size: 2.2rem; color: #5D4037; margin-top: 20px; line-height: 1.4; white-space: pre-line; }
+
+        .char-chef { position: absolute; left: -80px; bottom: -20px; height: 70%; z-index: 10; pointer-events: none; }
+        .char-child { position: absolute; right: -80px; bottom: -120px; height: 60%; z-index: 10; pointer-events: none; }
+
+        .interaction-zone { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; position: relative; }
+        
+        #scratch-prompt {
+            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+            background: linear-gradient(180deg, #FF5252 0%, #D32F2F 100%);
+            color: white; padding: 20px 80px; border-radius: 100px; 
+            font-size: 4rem; display: none; z-index: 1500; border: 8px solid white;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+            animation: bounceIn 1s infinite alternate ease-in-out;
+            white-space: nowrap;
+        }
+
+        @keyframes bounceIn {
+            from { transform: translateX(-50%) scale(1); }
+            to { transform: translateX(-50%) scale(1.1); }
+        }
+
+        .stage-area { position: relative; width: 1000px; height: 700px; display: flex; justify-content: center; align-items: center; }
+        .plate-img { position: absolute; bottom: -50px; width: 1100px; z-index: 5; }
+        #food-canvas-area { position: absolute; bottom: 80px; width: 650px; height: 650px; z-index: 20; }
+        #scratchCanvas { width: 650px; height: 650px; cursor: crosshair; }
+        .question-gif { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 300px; z-index: 21; pointer-events: none; }
+
+        .button-shelf { 
+            position: absolute; bottom: 20px; 
+            display: flex; flex-direction: column; align-items: center;
+            gap: 15px; z-index: 30; width: 900px;
+        }
+        .shelf-row { display: flex; gap: 15px; justify-content: center; }
+        .taste-btn {
+            background: white; border: 6px solid var(--dark-brown);
+            border-radius: 60px; width: 190px; height: 80px;
+            font-family: 'Fredoka One', cursive; font-size: 2rem;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 6px 0 var(--dark-brown); transition: transform 0.1s;
+        }
+
+        /* UPDATED RESULT BUBBLE: LOWER, BIGGER, AND LARGER TEXT */
+        #result-bubble {
+            position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
+            background: white; border: 12px solid var(--dark-brown);
+            border-radius: 120px; padding: 40px 80px;
+            font-size: 4.5rem; display: none; z-index: 100; align-items: center; gap: 40px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.4); text-align: center;
+            width: fit-content; max-width: 90%;
+        }
+
+        .check-btn {
+            background: var(--btn-green); color: white; border: none; 
+            border-radius: 30px; padding: 20px 45px; font-size: 3.5rem; 
+            cursor: pointer; box-shadow: 0 8px 0 #2E7D32;
+        }
+
+        #next-btn { font-size: 8rem; color: var(--btn-red); cursor: pointer; display: none; }
+
+        #game-container { display: none; width: 100%; height: 100%; position: relative; }
+    </style>
+</head>
+<body onclick="initAudio()">
+
+    <div class="controls-top">
+        <button class="fs-toggle" onclick="toggleFS()">⛶ FULLSCREEN</button>
+        <div class="volume-ctrl">
+            <span>VOL</span>
+            <input id="vol-slider" type="range" min="0" max="1" step="0.1" value="0.5" oninput="adjustVolume(this.value)">
+        </div>
+    </div>
+
+    <div id="title-screen" class="screen active">
+        <div class="menu-btns">
+            <button class="title-btn" style="background:var(--btn-green); color:white" onclick="startGame()">START GAME</button>
+            <button class="title-btn" style="background:var(--btn-blue); color:white" onclick="showHow(true)">HOW TO PLAY</button>
+        </div>
+    </div>
+
+    <div id="how-screen" class="screen">
+        <div class="how-box">
+            <h1>HOW TO PLAY</h1>
+            <p>1. Read the Chef's clue!<br>
+               2. Pick the right taste pill.<br>
+               3. Scratch the food to reveal it!<br>
+               4. Read the sentence aloud!</p>
+            <button class="title-btn" style="background: var(--btn-red); color: white;" onclick="showHow(false)">GOT IT!</button>
+        </div>
+    </div>
+
+    <div id="game-container">
+        <img src="char_chef_idle.gif" class="char-chef">
+        <img id="child-img" src="char_child_neutral.png" class="char-child">
+        <div id="scratch-prompt">✨ SCRATCH TO REVEAL! ✨</div>
+
+        <div class="interaction-zone">
+            <div class="clue-box">
+                <h2>🔎 CLUE:</h2>
+                <p id="clue-display"></p>
+            </div>
+            <div class="stage-area">
+                <img src="plate.png" class="plate-img">
+                <div id="food-canvas-area">
+                    <canvas id="scratchCanvas" width="650" height="650"></canvas>
+                    <img id="q-gif" src="question.gif" class="question-gif">
+                </div>
+            </div>
+            <div class="button-shelf" id="taste-shelf">
+                <div class="shelf-row">
+                    <button class="taste-btn" onclick="guess(this, 'sweet')">sweet</button>
+                    <button class="taste-btn" onclick="guess(this, 'salty')">salty</button>
+                    <button class="taste-btn" onclick="guess(this, 'sour')">sour</button>
+                </div>
+                <div class="shelf-row">
+                    <button class="taste-btn" onclick="guess(this, 'spicy')">spicy</button>
+                    <button class="taste-btn" onclick="guess(this, 'bitter')">bitter</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="result-bubble">
+            <span id="sentence-text"></span>
+            <button class="check-btn" id="check-mark" onclick="showArrow()">✔</button>
+            <span id="next-btn" onclick="nextLevel()">➔</span>
+        </div>
+    </div>
+
+    <audio id="bgm" loop src="bgm_bistro_jazz.mp3"></audio>
+    <audio id="snd-correct" src="sfx_bell_chime.mp3"></audio>
+    <audio id="snd-wrong" src="sfx_wrong.mp3"></audio> 
+    <audio id="snd-scratch" src="sfx_scratch.mp3"></audio>
+
+<script>
+    const gameData = [
+        { id: "bitter_melon", name: "bitter melon", taste: "bitter", clues: "1. It is a vegetable.\n2. It is green.\n3. It is rough." },
+        { id: "pizza", name: "pizza", taste: "salty", clues: "1. It has cheese.\n2. It has different toppings.\n3. It is circle but cut into triangles." },
+        { id: "lemonade", name: "lemonade", taste: "sour", clues: "1. It has lemons.\n2. It has ice.\n3. Some people like it warm." },
+        { id: "hotpot", name: "hotpot", taste: "spicy", clues: "1. It is a big pot of hot soup.\n2. It is very red.\n3. You cook meat and vegetables in it." },
+        { id: "fried_squid", name: "fried squid", taste: "salty", clues: "1. It is seafood with a crunchy skin.\n2. It is chewy inside.\n3. It has pepper on top." },
+        { id: "sour_gummies", name: "sour gummies", taste: "sour", clues: "1. It is a soft and chewy candy.\n2. It has sugar that tastes sour.\n3. It is often shaped like worms or bears." },
+        { id: "cupcake", name: "cupcake", taste: "sweet", clues: "1. It is a very small cake.\n2. It has sweet cream on top.\n3. It comes in a small paper cup." },
+        { id: "pineapple_cake", name: "pineapple cake", taste: "sweet", clues: "1. It is a small, square cookie-cake.\n2. It is soft and buttery.\n3. It has sweet fruit jam inside." },
+        { id: "milk_tea", name: "milk tea", taste: "sweet", clues: "1. It is a mix of tea and milk.\n2. It is often cold with ice.\n3. It has black sugar balls at the bottom." },
+        { id: "spicy_jerky", name: "spicy jerky", taste: "spicy", clues: "1. It is dried meat.\n2. It is hard and salty.\n3. It makes your mouth feel hot." },
+        { id: "fried_chicken", name: "fried chicken", taste: "salty", clues: "1. It is chicken cooked in hot oil.\n2. The outside is very crunchy.\n3. It is a very popular fast food." }
+    ];
+
+    let currentLvl = 0;
+    let guessed = false;
+    let audioStarted = false;
+    const canvas = document.getElementById('scratchCanvas');
+    const ctx = canvas.getContext('2d');
+
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
+
+    function initAudio() {
+        if (audioStarted) return;
+        const bgm = document.getElementById('bgm');
+        bgm.play().then(() => { audioStarted = true; }).catch(e => {});
+    }
+
+    function toggleFS() {
+        if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+        else document.exitFullscreen();
+    }
+
+    function adjustVolume(val) {
+        const sounds = ['bgm', 'snd-correct', 'snd-wrong', 'snd-scratch'];
+        sounds.forEach(s => document.getElementById(s).volume = val);
+    }
+
+    function showHow(val) { document.getElementById('how-screen').classList.toggle('active', val); }
+
+    function startGame() {
+        initAudio();
+        shuffleArray(gameData);
+        document.getElementById('title-screen').classList.remove('active');
+        document.getElementById('game-container').style.display = 'block';
+        setupLevel();
+    }
+
+    function setupLevel() {
+        guessed = false;
+        const data = gameData[currentLvl];
+        document.getElementById('clue-display').innerText = data.clues;
+        document.getElementById('result-bubble').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+        document.getElementById('check-mark').style.display = 'inline-block';
+        document.getElementById('q-gif').style.display = 'block';
+        document.getElementById('scratch-prompt').style.display = 'none';
+        document.getElementById('child-img').src = "char_child_neutral.png";
+        document.getElementById('taste-shelf').style.display = 'flex';
+        
+        document.querySelectorAll('.taste-btn').forEach(b => {
+            b.style.backgroundColor = "white"; b.style.color = "var(--dark-brown)"; b.style.transform = "scale(1)";
+        });
+
+        canvas.style.backgroundImage = `url('${data.id}.png')`;
+        canvas.style.backgroundSize = "650px 650px";
+
+        const shadow = new Image();
+        shadow.src = `${data.id}_shadow.png`;
+        shadow.onload = () => {
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.clearRect(0, 0, 650, 650);
+            ctx.drawImage(shadow, 0, 0, 650, 650);
+        };
+        initScratch();
+    }
+
+    function guess(btn, taste) {
+        if (guessed) return;
+        if (taste === gameData[currentLvl].taste) {
+            guessed = true;
+            btn.style.backgroundColor = "var(--btn-green)";
+            btn.style.color = "white";
+            btn.style.transform = "scale(1.1)";
+            document.getElementById('snd-correct').play();
+            document.getElementById('child-img').src = `char_child_${taste}.png`;
+            document.getElementById('scratch-prompt').style.display = 'block';
+        } else {
+            const wrongSnd = document.getElementById('snd-wrong');
+            wrongSnd.currentTime = 0;
+            wrongSnd.play();
+            btn.style.backgroundColor = "var(--btn-red)";
+            btn.style.color = "white";
+            setTimeout(() => {
+                btn.style.backgroundColor = "white";
+                btn.style.color = "var(--dark-brown)";
+            }, 500);
+        }
+    }
+
+    function initScratch() {
+        let drawing = false;
+        const snd = document.getElementById('snd-scratch');
+        const scrub = (e) => {
+            if (!drawing || !guessed) return;
+            document.getElementById('q-gif').style.display = 'none';
+            document.getElementById('scratch-prompt').style.display = 'none';
+            const rect = canvas.getBoundingClientRect();
+            const x = (e.clientX || (e.touches && e.touches[0].clientX)) - rect.left;
+            const y = (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top;
+            ctx.globalCompositeOperation = 'destination-out';
+            ctx.beginPath(); ctx.arc(x, y, 70, 0, Math.PI * 2); ctx.fill();
+        };
+        canvas.onmousedown = (e) => { drawing = true; if(guessed) snd.play(); scrub(e); };
+        canvas.ontouchstart = (e) => { drawing = true; if(guessed) snd.play(); scrub(e); };
+        window.onmouseup = () => { if(drawing) finishScratch(); drawing = false; snd.pause(); };
+        window.ontouchend = () => { if(drawing) finishScratch(); drawing = false; snd.pause(); };
+        canvas.onmousemove = scrub;
+        canvas.ontouchmove = scrub;
+    }
+
+    function finishScratch() {
+        if (!guessed) return;
+        const data = gameData[currentLvl];
+        document.getElementById('sentence-text').innerText = `It's a ${data.name}. It's ${data.taste}.`;
+        document.getElementById('result-bubble').style.display = 'flex';
+        document.getElementById('taste-shelf').style.display = 'none';
+    }
+
+    function showArrow() {
+        document.getElementById('check-mark').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'inline-block';
+    }
+
+    function nextLevel() {
+        currentLvl = (currentLvl + 1) % gameData.length;
+        if (currentLvl === 0) shuffleArray(gameData);
+        setupLevel();
+    }
+</script>
+</body>
+</html>
